@@ -1,0 +1,24 @@
+{
+	"name": "jspackr",
+	"version": "0.1.1",
+	"description": "A minimal JavaScript bundler powered by esbuild",
+	"bin": {
+		"jspackr": "bin/jspackr"
+	},
+	"files": [
+		"bin/jspackr",
+		"README.md",
+		"LICENSE"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/kalokaradia/jspackr"
+	},
+	"keywords": [
+		"bundler",
+		"esbuild",
+		"javascript",
+		"cli"
+	],
+	"license": "MIT"
+}

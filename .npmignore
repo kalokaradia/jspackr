@@ -1,0 +1,25 @@
+# Go source & tooling
+cmd/
+internal/
+go.mod
+go.sum
+
+# Development & repo noise
+.git/
+.gitignore
+.github/
+
+# Docs & misc
+*.md
+!README.md
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+
+# Node stuff (just in case)
+node_modules/
+package-lock.json
+
+# Build leftovers (kalau ada)
+dist/
