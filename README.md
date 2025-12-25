@@ -48,8 +48,10 @@ jspackr -i src/index.js -o dist/app.js -m -r
 
 ## CLI Options
 
-- -i, --input <file> Entry file
-- -o, --out <file> Output file (default: dist/bundle.js)
-- -m, --minify Minify output
-- -r, --report Show build report
-- -h, --help Show help
+| Flag | Long Form       | Description                           |
+| ---- | --------------- | ------------------------------------- |
+| -i   | --input \<file> | Entry file                            |
+| -o   | --out \<file>   | Output file (default: dist/bundle.js) |
+| -m   | --minify        | Minify output                         |
+| -r   | --report        | Show build report                     |
+| -h   | --help          | Show help                             |
