@@ -58,5 +58,5 @@ jspackr -i src/index.js -o dist/app.js -m -r
 
 ---
 
-Created with ❤️ by Kaloka Radia Nanda
+Created with ❤️ by Kaloka Radia Nanda  
 Licensed under the MIT License.

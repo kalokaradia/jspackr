@@ -9,16 +9,19 @@ import (
 	"sort"
 
 	"github.com/evanw/esbuild/pkg/api"
+	"github.com/fatih/color"
 )
 
-
+// Options
 type Options struct {
-	Input  string
-	Output string
-	Minify bool
-	Report bool
+	Input     string
+	Output    string
+	Minify    bool
+	Report    bool
+	SourceMap string
 }
 
+// Report structure
 type MetaFile struct {
 	Inputs map[string]struct {
 		Bytes int `json:"bytes"`
@@ -46,24 +49,26 @@ func printReport(meta string) {
 		return items[i].Bytes > items[j].Bytes
 	})
 
+	green := color.New(color.FgGreen).SprintFunc()
 	fmt.Println("\nTop contributors:")
+
 	limit := 5
 	if len(items) < limit {
 		limit = len(items)
 	}
 
 	for i := 0; i < limit; i++ {
-		fmt.Printf("- %-40s %6d KB\n", items[i].Path, items[i].Bytes/1024)
+		fmt.Printf("- %-40s %6s KB\n", items[i].Path, green(items[i].Bytes/1024))
 	}
 }
 
 
+// Run build
 func Run(opts Options) error {
 	if opts.Input == "" {
 		return errors.New("input file is required")
 	}
 
-	// pastikan folder output ada
 	dir := filepath.Dir(opts.Output)
 	if dir != "." {
 		if err := os.MkdirAll(dir, 0755); err != nil {
@@ -71,18 +76,28 @@ func Run(opts Options) error {
 		}
 	}
 
+	var sm api.SourceMap
+	switch opts.SourceMap {
+	case "l":
+		sm = api.SourceMapLinked
+	case "in":
+		sm = api.SourceMapInline
+	default:
+		sm = api.SourceMapNone
+	}
+
+	// Build
 	result := api.Build(api.BuildOptions{
-		EntryPoints: []string{opts.Input},
-		Bundle:      true,
-		
+		EntryPoints:       []string{opts.Input},
+		Bundle:            true,
 		MinifyWhitespace:  opts.Minify,
 		MinifyIdentifiers: opts.Minify,
 		MinifySyntax:      opts.Minify,
-		
-		Outfile:  opts.Output,
-		Write:    true,
-		Platform: api.PlatformBrowser,
-		Metafile: opts.Report,
+		Outfile:           opts.Output,
+		Write:             true,
+		Platform:          api.PlatformBrowser,
+		Metafile:          opts.Report,
+		Sourcemap:         sm,
 	})
 
 	if len(result.Errors) > 0 {

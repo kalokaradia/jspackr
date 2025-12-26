@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../src/index.js"],
+  "sourcesContent": ["function fibonacci(n) {\n\treturn n <= 1 ? n : fibonacci(n - 1) + fibonacci(n - 2);\n}\n\nconsole.log(fibonacci(10));\n\nfunction greet(name) {\n\tconsole.log(`Hello, ${name}`);\n}\n\ngreet(\"Kaloka\");\n"],
+  "mappings": "MAAA,SAASA,EAAUC,EAAG,CACrB,OAAOA,GAAK,EAAIA,EAAID,EAAUC,EAAI,CAAC,EAAID,EAAUC,EAAI,CAAC,CACvD,CAEA,QAAQ,IAAID,EAAU,EAAE,CAAC,EAEzB,SAASE,EAAMC,EAAM,CACpB,QAAQ,IAAI,UAAUA,CAAI,EAAE,CAC7B,CAEAD,EAAM,QAAQ",
+  "names": ["fibonacci", "n", "greet", "name"]
+}

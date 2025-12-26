@@ -1,3 +1,11 @@
-import veryLongFunctionNameThatShouldBeMinified from "./HelloWorld.js";
+function fibonacci(n) {
+	return n <= 1 ? n : fibonacci(n - 1) + fibonacci(n - 2);
+}
 
-veryLongFunctionNameThatShouldBeMinified();
+console.log(fibonacci(10));
+
+function greet(name) {
+	console.log(`Hello, ${name}`);
+}
+
+greet("Kaloka");

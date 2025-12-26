@@ -5,17 +5,26 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/kalokaradia/jspackr/internal/build"
+	"github.com/kalokaradia/jspackr/internal/watch"
 )
 
 func main() {
 	var (
-		input  string
-		output string
-		minify bool
-		help   bool
-		report bool
+		input     string
+		output    string
+		minify    bool
+		report    bool
+		help      bool
+		sourceMap string
+		isWatch 		bool
 	)
+
+	// --- CLI flags ---
+	flag.BoolVar(&isWatch, "watch", false, "Enable watch mode")
+	flag.BoolVar(&isWatch, "w", false, "Enable watch mode (shorthand)")
+
 
 	flag.StringVar(&input, "input", "", "Entry file")
 	flag.StringVar(&input, "i", "", "Entry file (shorthand)")
@@ -30,24 +39,29 @@ func main() {
 	flag.BoolVar(&report, "r", false, "Show build report (shorthand)")
 
 	flag.BoolVar(&help, "help", false, "Show help")
-	flag.BoolVar(&help, "h", false, "Show help")
+	flag.BoolVar(&help, "h", false, "Show help (shorthand)")
+
+	flag.StringVar(&sourceMap, "source", "none", "Source map: none, l (linked), in (inline)")
+	flag.StringVar(&sourceMap, "s", "none", "Source map: none, l (linked), in (inline) (shorthand)")
 
 	flag.Usage = func() {
-		fmt.Println(`jspackr v0.1.0
+		fmt.Println(`jspackr v0.2.0
 
 Usage:
   jspackr [entry] [options]
 
 Options:
-  -i, --input <file>     Entry file
-  -o, --out <file>       Output file (default: dist/bundle.js)
-  -m, --minify           Minify output
-  -r, --report           Show build report
-  -h, --help             Show help
+  -i, --input <file>       Entry file
+  -o, --out <file>         Output file (default: dist/bundle.js)
+  -m, --minify             Minify output
+  -r, --report             Show build report
+  -s, --source <mode>      Source map: none, l (linked), in (inline)
+	-w, --watch							 Enable watch mode
+  -h, --help               Show help
 
 Examples:
   jspackr src/index.js
-  jspackr -i src/index.js -o dist/app.js -m --report`)
+  jspackr -i src/index.js -o dist/app.js -m -r -s l`)
 	}
 
 	flag.Parse()
@@ -57,26 +71,46 @@ Examples:
 		return
 	}
 
-	// positional arg fallback
 	if input == "" && flag.NArg() > 0 {
 		input = flag.Arg(0)
 	}
 
 	if input == "" {
-		fmt.Println("Error: input file is required\n")
+		color.New(color.FgRed).Println("Error: input file is required\n")
 		flag.Usage()
 		os.Exit(1)
 	}
 
-	if err := build.Run(build.Options{
-		Input:  input,
-		Output: output,
-		Minify: minify,
-		Report: report,
-	}); err != nil {
-		fmt.Println("Build failed:", err)
+	if isWatch {
+			color.New(color.FgBlue).Println("👀 Watch mode enabled...")
+			if err := watch.WatchFiles(input, build.Options{
+					Input:     input,
+					Output:    output,
+					Minify:    minify,
+					Report:    report,
+					SourceMap: sourceMap,
+			}); err != nil {
+					color.New(color.FgRed).Println("❌ Watcher error:", err)
+					os.Exit(1)
+			}
+			return
+	}
+
+
+	// --- Run build ---
+	err := build.Run(build.Options{
+		Input:     input,
+		Output:    output,
+		Minify:    minify,
+		Report:    report,
+		SourceMap: sourceMap,
+	})
+
+	if err != nil {
+		color.New(color.FgRed).Printf("❌ Build failed: %s\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Println("Build finished")
+	// Success
+	color.New(color.FgGreen).Println("✅ Build finished")
 }
