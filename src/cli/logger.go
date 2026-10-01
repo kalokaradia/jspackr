@@ -1,8 +1,10 @@
 package cli
 
 import (
+	"bufio"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/fatih/color"
@@ -52,6 +54,7 @@ type Logger struct {
 // New creates a new logger with the specified log level
 func New(level string) *Logger {
 	lvl := LogLevelFromString(level)
+	errorColor := color.New(color.FgRed, color.Bold)
 
 	return &Logger{
 		level:      lvl,
@@ -62,7 +65,7 @@ func New(level string) *Logger {
 		infoColor:  color.New(color.FgCyan),
 		debugColor: color.New(color.FgWhite),
 		successCol: color.New(color.FgGreen, color.Bold),
-		errorCol:   color.New(color.FgRed, color.Bold),
+		errorCol:   errorColor,
 	}
 }
 
@@ -210,6 +213,77 @@ func (l *Logger) Debug(format string, args ...any) {
 	}
 }
 
+// GetColors returns the colors object
+func (l *Logger) GetColors() *color.Color {
+	return l.colors
+}
+
+// GetSuccessColor returns the success color
+func (l *Logger) GetSuccessColor() *color.Color {
+	return l.successCol
+}
+
+// PrintTitle prints a title message (info level)
+func (l *Logger) PrintTitle() {
+	if l.level < Info {
+		return
+	}
+	fmt.Println()
+	l.infoColor.Println("jspackr")
+	fmt.Println()
+}
+
+// PrintSection prints a section header (info level)
+func (l *Logger) PrintSection(title string) {
+	if l.level < Info {
+		return
+	}
+	width := 60
+	padding := (width - len(title) - 2) / 2
+	divider := ""
+	for i := 0; i < width; i++ {
+		divider += "─"
+	}
+
+	l.infoColor.Println("\n" + divider)
+	l.infoColor.Printf(" %*s %s %*s \n", padding, "", title, padding, "")
+	l.infoColor.Println(divider)
+}
+
+// PrintKeyValue prints a key-value pair (info level)
+func (l *Logger) PrintKeyValue(key, value string, indent int) {
+	if l.level < Info {
+		return
+	}
+	indentStr := ""
+	for i := 0; i < indent; i++ {
+		indentStr += "  "
+	}
+	l.warnColor.Printf("%s%s%s:", indentStr, " ", key)
+	l.successCol.Printf(" %s\n", value)
+}
+
+// PrintDivider prints a visual divider (info level)
+func (l *Logger) PrintDivider() {
+	if l.level < Info {
+		return
+	}
+	divider := ""
+	for i := 0; i < 60; i++ {
+		divider += "─"
+	}
+	l.colors.Println(divider)
+}
+
+// PrintStat prints a statistic with label (info level)
+func (l *Logger) PrintStat(label, value string) {
+	if l.level < Info {
+		return
+	}
+	l.warnColor.Printf("  %s %s ", " ", label)
+	l.infoColor.Printf("%s\n", value)
+}
+
 // Print prints a raw message without any formatting
 func (l *Logger) Print(args ...any) {
 	fmt.Print(args...)
@@ -225,8 +299,11 @@ func (l *Logger) Printf(format string, args ...any) {
 	fmt.Printf(format, args...)
 }
 
-// PrintSuccess prints a success banner
+// PrintSuccess prints a success banner (info level)
 func (l *Logger) PrintSuccess() {
+	if l.level < Info {
+		return
+	}
 	if l.useIcons {
 		l.successCol.Println("✓ Build succeeded")
 	} else {
@@ -243,8 +320,11 @@ func (l *Logger) PrintError(msg string) {
 	}
 }
 
-// PrintWatch prints watch mode status
+// PrintWatch prints watch mode status (info level)
 func (l *Logger) PrintWatch(path string) {
+	if l.level < Info {
+		return
+	}
 	if l.useIcons {
 		l.infoColor.Printf("👀 Watching: %s\n", path)
 	} else {
@@ -252,8 +332,11 @@ func (l *Logger) PrintWatch(path string) {
 	}
 }
 
-// PrintRebuild prints rebuild notification
+// PrintRebuild prints rebuild notification (info level)
 func (l *Logger) PrintRebuild() {
+	if l.level < Info {
+		return
+	}
 	if l.useIcons {
 		l.infoColor.Println("↻ Rebuilding...")
 	} else {
@@ -261,8 +344,11 @@ func (l *Logger) PrintRebuild() {
 	}
 }
 
-// PrintDirCreated prints directory creation message
+// PrintDirCreated prints directory creation message (info level)
 func (l *Logger) PrintDirCreated(path string) {
+	if l.level < Info {
+		return
+	}
 	if l.useIcons {
 		l.successCol.Printf("📁 Created directory: %s\n", path)
 	} else {
@@ -270,8 +356,11 @@ func (l *Logger) PrintDirCreated(path string) {
 	}
 }
 
-// PrintBuildStart prints build start message
+// PrintBuildStart prints build start message (info level)
 func (l *Logger) PrintBuildStart() {
+	if l.level < Info {
+		return
+	}
 	if l.useIcons {
 		l.infoColor.Println("⚙️  Building...")
 	} else {
@@ -279,3 +368,95 @@ func (l *Logger) PrintBuildStart() {
 	}
 }
 
+// NewSpinner creates a new spinner (info level)
+func (l *Logger) NewSpinner(message string) *Spinner {
+	return NewSpinner(message)
+}
+
+// Spinner represents an animated spinner
+type Spinner struct {
+	message  string
+	interval time.Duration
+	stopChan chan struct{}
+	done     chan struct{}
+	idx      int
+}
+
+// Spinner frames for animation
+var spinnerFrames = []string{
+	"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏",
+}
+
+// NewSpinner creates a new spinner with message
+func NewSpinner(message string) *Spinner {
+	return &Spinner{
+		message:  message,
+		interval: 80 * time.Millisecond,
+		stopChan: make(chan struct{}),
+		done:     make(chan struct{}),
+		idx:      0,
+	}
+}
+
+// Start begins the spinner animation
+func (s *Spinner) Start() {
+	go func() {
+		for {
+			select {
+			case <-s.stopChan:
+				// Clear the line and show final state
+				fmt.Print("\r")
+				for i := 0; i < 80; i++ {
+					fmt.Print(" ")
+				}
+				fmt.Print("\r")
+				close(s.done)
+				return
+			case <-time.After(s.interval):
+				frame := spinnerFrames[s.idx]
+				color.New(color.FgCyan).Printf("\r%s %s", frame, s.message)
+				s.idx = (s.idx + 1) % len(spinnerFrames)
+			}
+		}
+	}()
+}
+
+// Stop stops the spinner and shows completion
+func (s *Spinner) Stop(success bool) {
+	close(s.stopChan)
+	<-s.done
+
+	if success {
+		color.New(color.FgGreen).Printf("\r✓ %s\n", s.message)
+	} else {
+		color.New(color.FgRed).Printf("\r✗ %s\n", s.message)
+	}
+}
+
+// Confirm prompts user for yes/no confirmation
+func (l *Logger) Confirm(message string, defaultYes bool) bool {
+	// Confirmation always shown (critical for user interaction)
+	defaultStr := "[y/N]"
+	if defaultYes {
+		defaultStr = "[Y/n]"
+	}
+
+	l.colors.Print(message + " " + defaultStr + ": ")
+
+	reader := bufio.NewReader(os.Stdin)
+	input, _ := reader.ReadString('\n')
+	input = strings.TrimSpace(input)
+
+	if input == "" {
+		return defaultYes
+	}
+
+	lower := strings.ToLower(input)
+	return lower == "y" || lower == "yes"
+}
+
+// ConfirmCreateDir prompts user to create a directory
+func (l *Logger) ConfirmCreateDir(path string) bool {
+	message := fmt.Sprintf("Directory '%s' does not exist. Create it?", path)
+	return l.Confirm(message, false)
+}

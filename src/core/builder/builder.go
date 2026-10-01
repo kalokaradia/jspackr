@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/evanw/esbuild/pkg/api"
+	"github.com/kalokaradia/jspackr/src/cli"
 )
 
 // Options defines build options
@@ -16,6 +17,8 @@ type Options struct {
 	Minify    bool
 	Report    bool
 	SourceMap string
+	Format    string
+	Logger    *cli.Logger
 }
 
 // Run execute the build process with given options
@@ -63,6 +66,7 @@ func Run(opts Options) error {
 		Platform:          api.PlatformBrowser,
 		Metafile:          opts.Report,
 		Sourcemap:         MapSourceMap(opts.SourceMap),
+		Format:            MapFormat(opts.Format),
 	})
 
 	if len(result.Errors) > 0 {
@@ -73,15 +77,21 @@ func Run(opts Options) error {
 
 	// Build report
 	buildResult := BuildResult{
-		OutputPath: opts.Output,
-		InputSize:  GetInputSize(result.Metafile),
-		OutputSize: GetOutputSize(opts.Output),
+		OutputPath:  opts.Output,
+		InputSize:   GetInputSize(result.Metafile),
+		OutputSize:  GetOutputSize(opts.Output),
 		ModuleCount: GetModuleCount(result.Metafile),
 		Elapsed:     elapsed,
 		Metafile:    result.Metafile,
 	}
 
-	PrintReport(buildResult)
+	// Print report using logger if available
+	if opts.Logger != nil && opts.Report {
+		PrintReport(opts.Logger, buildResult)
+	} else if opts.Report {
+		// Fallback: print report without logger
+		PrintReport(nil, buildResult)
+	}
 
 	return nil
 }

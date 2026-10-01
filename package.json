@@ -1,38 +1,42 @@
 {
-	"name": "jspackr",
-	"version": "0.3.0",
-	"description": "A fast and modern JavaScript bundler powered by esbuild",
-	"bin": {
-		"jspackr": "bin/jspackr"
-	},
-	"files": [
-		"bin/jspackr",
-		"README.md",
-		"LICENSE"
-	],
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/kalokaradia/jspackr.git"
-	},
-	"keywords": [
-		"bundler",
-		"esbuild",
-		"javascript",
-		"cli",
-		"build-tool",
-		"minifier"
-	],
-	"categories": [
-		"Other"
-	],
-	"author": "Kaloka Radia Nanda",
-	"license": "MIT",
-	"homepage": "https://github.com/kalokaradia/jspackr#readme",
-	"bugs": {
-		"url": "https://github.com/kalokaradia/jspackr/issues"
-	},
-	"engines": {
-		"node": ">=18"
-	},
-	"preferGlobal": true
+  "name": "jspackr",
+  "version": "0.4.0",
+  "description": "A fast and modern JavaScript bundler powered by esbuild",
+  "bin": {
+    "jspackr": "index.js"
+  },
+  "files": [
+    "bin/*",
+    "index.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kalokaradia/jspackr.git"
+  },
+  "keywords": [
+    "bundler",
+    "esbuild",
+    "javascript",
+    "cli",
+    "build-tool",
+    "minifier"
+  ],
+  "categories": [
+    "Formatters"
+  ],
+  "author": "Kaloka Radia Nanda",
+  "license": "MIT",
+  "homepage": "https://github.com/kalokaradia/jspackr#readme",
+  "bugs": {
+    "url": "https://github.com/kalokaradia/jspackr/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "preferGlobal": true,
+  "dependencies": {
+    "jspackr": "file:jspackr-0.4.0.tgz"
+  }
 }

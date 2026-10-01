@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"os"
 
 	"github.com/kalokaradia/jspackr/src/cli"
@@ -10,23 +11,26 @@ import (
 	"github.com/kalokaradia/jspackr/src/utils"
 )
 
+// version is set by release builds with -ldflags. Local builds report dev.
+var version = "0.4.0"
+
 func main() {
-	const version = "0.3.0"
 	flagCfg, configPath, showVersion, help := utils.ParseFlags()
 
 	// Handle version flag
 	if err := utils.ValidateVersionFlag(showVersion); err != nil {
-		cli.DefaultStyles.Key.Printf("\n✗ %v\n", err)
-		os.Exit(1)
+		// Create logger with default level for error output
+		logger := cli.New("info")
+		logger.Fatal(err.Error())
 	}
 
 	if showVersion {
-		utils.ShowVersion()
+		utils.ShowVersion(version)
 		return
 	}
 
 	if help {
-		utils.ShowUsage()
+		utils.ShowUsage(version)
 		return
 	}
 
@@ -43,8 +47,8 @@ func main() {
 	if configPath != "" {
 		fileCfg, err := config.Load(configPath)
 		if err != nil {
-			cli.DefaultStyles.Key.Printf("\n✗ Failed to load config: %v\n", err)
-			os.Exit(2)
+			logger := cli.New("info")
+			logger.Fatal("Failed to load config: " + err.Error())
 		}
 		finalCfg = fileCfg
 	}
@@ -52,17 +56,17 @@ func main() {
 	config.Merge(finalCfg, flagCfg)
 
 	if err := config.Validate(finalCfg); err != nil {
-		cli.DefaultStyles.Key.Printf("\n✗ %v\n", err)
-		os.Exit(2)
+		logger := cli.New("info")
+		logger.Fatal(err.Error())
 	}
 
 	logger := cli.New(finalCfg.LogLevel)
 
 	// Print welcome banner
-	cli.PrintTitle()
+	logger.PrintTitle()
 
 	// Print full build configuration summary
-	cli.PrintBuildSummary(finalCfg)
+	printBuildSummary(logger, finalCfg)
 
 	// Validate input path exists
 	if err := config.ValidateInputPath(finalCfg.Input); err != nil {
@@ -76,8 +80,8 @@ func main() {
 			// Output directory doesn't exist, ask user to create it
 			// Skip confirmation if noConfirm flag is set
 			if !finalCfg.NoConfirm {
-				if !cli.ConfirmCreateDir(outDir) {
-					cli.DefaultStyles.Warn.Println("\n⚠ Build cancelled")
+				if !logger.ConfirmCreateDir(outDir) {
+					logger.Warn("Build cancelled")
 					return
 				}
 			}
@@ -94,8 +98,12 @@ func main() {
 
 	// Check if we should overwrite existing file
 	// Skip confirmation if force, yes, or noConfirm flags are set
-	if !utils.ConfirmOverwrite(finalCfg.Output, finalCfg.Force, finalCfg.Yes, finalCfg.NoConfirm) {
-		cli.DefaultStyles.Warn.Println("\n⚠ Build cancelled")
+	confirmed, err := confirmOverwrite(logger, finalCfg.Output, finalCfg.Force, finalCfg.Yes, finalCfg.NoConfirm)
+	if err != nil {
+		logger.FatalErr(err, "Cannot inspect output path")
+	}
+	if !confirmed {
+		logger.Warn("Build cancelled")
 		return
 	}
 
@@ -114,17 +122,21 @@ func main() {
 		Minify:    finalCfg.Minify,
 		Report:    finalCfg.Report,
 		SourceMap: finalCfg.SourceMap,
+		Format:    finalCfg.Format,
+		Logger:    logger,
 	}
 
 	if finalCfg.Watch {
 		logger.Info("Watch mode enabled")
-		watcher.WatchFiles(finalCfg.Input, opts, logger)
+		if err := watcher.WatchFiles(finalCfg.Input, opts, logger); err != nil {
+			logger.FatalErr(err, "Watch failed")
+		}
 		return
 	}
 
 	// Start build
 	logger.PrintBuildStart()
-	spinner := cli.NewSpinner("Bundling...")
+	spinner := logger.NewSpinner("Bundling...")
 	spinner.Start()
 
 	if err := builder.Run(opts); err != nil {
@@ -137,3 +149,42 @@ func main() {
 	logger.PrintSuccess()
 }
 
+// printBuildSummary prints a summary of the build configuration
+func printBuildSummary(logger *cli.Logger, cfg *config.Config) {
+	logger.PrintSection("Build Configuration")
+
+	logger.PrintKeyValue("Input", cfg.Input, 0)
+	logger.PrintKeyValue("Output", cfg.Output, 0)
+	logger.PrintKeyValue("Minify", boolToStr(cfg.Minify), 0)
+	logger.PrintKeyValue("Source Map", cfg.SourceMap, 0)
+	logger.PrintKeyValue("Format", cfg.Format, 0)
+	logger.PrintKeyValue("Report", boolToStr(cfg.Report), 0)
+	logger.PrintKeyValue("Watch Mode", boolToStr(cfg.Watch), 0)
+	logger.PrintKeyValue("Log Level", cfg.LogLevel, 0)
+
+	logger.PrintDivider()
+}
+
+// confirmOverwrite checks if we should overwrite existing file
+func confirmOverwrite(logger *cli.Logger, output string, force, yes, noConfirm bool) (bool, error) {
+	if force || yes || noConfirm {
+		return true, nil
+	}
+
+	// Check if file exists
+	if _, err := os.Stat(output); errors.Is(err, os.ErrNotExist) {
+		return true, nil
+	} else if err != nil {
+		return false, err
+	}
+
+	return logger.Confirm("File already exists. Overwrite?", false), nil
+}
+
+// boolToStr converts bool to string
+func boolToStr(b bool) string {
+	if b {
+		return "true"
+	}
+	return "false"
+}

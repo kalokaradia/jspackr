@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../fixtures/imports/math.js", "../fixtures/imports/message.js", "../fixtures/imports/index.js"],
+  "sourcesContent": ["export function add(a, b) {\r\n  return a + b;\r\n}\r\n\r\nexport function multiply(a, b) {\r\n  return a * b;\r\n}\r\n", "export const message = \"Bundled successfully\";\r\n", "import { add, multiply } from \"./math.js\";\r\nimport { message } from \"./message.js\";\r\n\r\nconsole.log(message);\r\nconsole.log(\"add:\", add(10, 20));\r\nconsole.log(\"multiply:\", multiply(5, 6));\r\n"],
+  "mappings": ";;AAAO,WAAS,IAAI,GAAG,GAAG;AACxB,WAAO,IAAI;AAAA,EACb;AAEO,WAAS,SAAS,GAAG,GAAG;AAC7B,WAAO,IAAI;AAAA,EACb;;;ACNO,MAAM,UAAU;;;ACGvB,UAAQ,IAAI,OAAO;AACnB,UAAQ,IAAI,QAAQ,IAAI,IAAI,EAAE,CAAC;AAC/B,UAAQ,IAAI,aAAa,SAAS,GAAG,CAAC,CAAC;",
+  "names": []
+}

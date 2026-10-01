@@ -7,6 +7,7 @@ type Config struct {
 	Minify    bool   `json:"minify"`
 	Report    bool   `json:"report"`
 	SourceMap string `json:"sourcemap"`
+	Format    string `json:"format"`
 	Watch     bool   `json:"watch"`
 	LogLevel  string `json:"logLevel"`
 	// Force flags for non-interactive mode
@@ -20,6 +21,7 @@ func Default() *Config {
 	return &Config{
 		Output:    "dist/bundle.js",
 		SourceMap: "none",
+		Format:    "iife",
 		LogLevel:  "info",
 	}
 }

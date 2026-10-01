@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -10,6 +11,18 @@ import (
 func Validate(cfg *Config) error {
 	if cfg.Input == "" {
 		return errors.New("entry file is required")
+	}
+	if cfg.LogLevel != "" {
+		switch cfg.LogLevel {
+		case "debug", "info", "warn", "error":
+		default:
+			return fmt.Errorf("invalid log level %q: use debug, info, warn, or error", cfg.LogLevel)
+		}
+	}
+	switch cfg.Format {
+	case "iife", "esm", "cjs":
+	default:
+		return errors.New("invalid format: use iife, esm, or cjs")
 	}
 
 	switch cfg.SourceMap {
@@ -24,19 +37,19 @@ func Validate(cfg *Config) error {
 func ValidateInputPath(input string) error {
 	info, err := os.Stat(input)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return errors.New("input path does not exist: " + input)
+		if errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("input path %q does not exist: %w", input, err)
 		}
-		return err
+		return fmt.Errorf("inspect input path %q: %w", input, err)
 	}
 	if info.IsDir() {
 		// For directory input, check if it's empty
 		entries, err := os.ReadDir(input)
 		if err != nil {
-			return err
+			return fmt.Errorf("read input directory %q: %w", input, err)
 		}
 		if len(entries) == 0 {
-			return errors.New("input directory is empty: " + input)
+			return fmt.Errorf("input directory is empty: %s", input)
 		}
 	}
 	return nil
@@ -52,10 +65,10 @@ func ValidateOutputPath(output string) (string, error) {
 	}
 	info, err := os.Stat(dir)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return dir, errors.New("output directory does not exist: " + dir)
+		if errors.Is(err, os.ErrNotExist) {
+			return dir, fmt.Errorf("output directory does not exist: %s", dir)
 		}
-		return dir, err
+		return dir, fmt.Errorf("inspect output directory %q: %w", dir, err)
 	}
 	if !info.IsDir() {
 		return dir, errors.New("output path is not a directory: " + dir)

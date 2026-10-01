@@ -1,0 +1,2 @@
+(()=>{var o="my name is kaloka";console.log(o);})();
+//# sourceMappingURL=data:application/json;base64,ewogICJ2ZXJzaW9uIjogMywKICAic291cmNlcyI6IFsiLi4vZml4dHVyZXMvYmFzaWMvaW5kZXguanMiXSwKICAic291cmNlc0NvbnRlbnQiOiBbImNvbnN0IG1lc3NhZ2UgPSBcIm15IG5hbWUgaXMga2Fsb2thXCI7XHJcblxyXG5jb25zb2xlLmxvZyhtZXNzYWdlKTtcclxuIl0sCiAgIm1hcHBpbmdzIjogIk1BQUEsSUFBTUEsRUFBVSxvQkFFaEIsUUFBUSxJQUFJQSxDQUFPIiwKICAibmFtZXMiOiBbIm1lc3NhZ2UiXQp9Cg==

@@ -1,0 +1,2 @@
+(()=>{var o="Hello from JSPACKR";console.log(o);})();
+//# sourceMappingURL=data:application/json;base64,ewogICJ2ZXJzaW9uIjogMywKICAic291cmNlcyI6IFsiLi4vZml4dHVyZXMvYmFzaWMvaW5kZXguanMiXSwKICAic291cmNlc0NvbnRlbnQiOiBbImNvbnN0IG1lc3NhZ2UgPSBcIkhlbGxvIGZyb20gSlNQQUNLUlwiO1xyXG5cclxuY29uc29sZS5sb2cobWVzc2FnZSk7XHJcbiJdLAogICJtYXBwaW5ncyI6ICJNQUFBLElBQU1BLEVBQVUscUJBRWhCLFFBQVEsSUFBSUEsQ0FBTyIsCiAgIm5hbWVzIjogWyJtZXNzYWdlIl0KfQo=

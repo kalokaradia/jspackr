@@ -1,0 +1,7 @@
+{
+  "input": "tests/fixtures/imports/index.js",
+  "output": "tests/output/config.js",
+  "minify": true,
+  "sourceMap": "in",
+  "report": true
+}

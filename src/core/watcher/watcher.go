@@ -1,7 +1,14 @@
 package watcher
 
 import (
+	"context"
+	"fmt"
+	"io/fs"
+	"os"
+	"os/signal"
 	"path/filepath"
+	"runtime"
+	"strings"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -9,86 +16,135 @@ import (
 	"github.com/kalokaradia/jspackr/src/core/builder"
 )
 
-var (
-	fileHashes = make(map[string][32]byte)
-)
+const debounceDelay = 300 * time.Millisecond
 
-// WatchFiles watch file changes and trigger rebuilds
+// WatchFiles watches the entry tree and rebuilds until interrupted by Ctrl+C.
 func WatchFiles(entry string, opts builder.Options, logger *cli.Logger) error {
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		return err
-	}
-	defer watcher.Close()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+	return WatchFilesContext(ctx, entry, opts, logger)
+}
 
-	// Use default logger if nil
+// WatchFilesContext watches the entry tree until ctx is cancelled.
+func WatchFilesContext(ctx context.Context, entry string, opts builder.Options, logger *cli.Logger) error {
 	if logger == nil {
 		logger = cli.New("info")
 	}
 
-	// consistent absolute path
 	entryPath, err := filepath.Abs(entry)
 	if err != nil {
+		return fmt.Errorf("resolve entry path %q: %w", entry, err)
+	}
+	entryInfo, err := os.Stat(entryPath)
+	if err != nil {
+		return fmt.Errorf("inspect entry path %q: %w", entryPath, err)
+	}
+	root := filepath.Dir(entryPath)
+	if entryInfo.IsDir() {
+		root = entryPath
+	}
+
+	outputPath, err := filepath.Abs(opts.Output)
+	if err != nil {
+		return fmt.Errorf("resolve output path %q: %w", opts.Output, err)
+	}
+
+	fsw, err := fsnotify.NewWatcher()
+	if err != nil {
+		return fmt.Errorf("create file watcher: %w", err)
+	}
+	defer fsw.Close()
+
+	if err := addTree(fsw, root); err != nil {
 		return err
 	}
-
-	// baseline hash
-	if hash, err := HashFile(entryPath); err == nil {
-		fileHashes[entryPath] = hash
-	}
-
 	logger.PrintWatch(entryPath)
 
-	go func() {
-		for {
-			select {
-			case event, ok := <-watcher.Events:
-				if !ok {
-					return
-				}
-				if event.Op&(fsnotify.Write|fsnotify.Create) == 0 {
-					continue
-				}
-
-				eventPath, err := filepath.Abs(event.Name)
-				if err != nil || eventPath != entryPath {
-					continue
-				}
-
-				// debounce: wait 300ms before rebuild
-				StartDebounce(300*time.Millisecond, func() {
-					newHash, err := HashFile(entryPath)
-					if err != nil {
-						return
-					}
-					if newHash == fileHashes[entryPath] {
-						return
-					}
-
-					fileHashes[entryPath] = newHash
-					logger.PrintRebuild()
-
-					if err := builder.Run(opts); err != nil {
-						logger.Error("Build failed: %v", err)
-					} else {
-						logger.PrintSuccess()
-					}
-				})
-
-			case err, ok := <-watcher.Errors:
-				if ok {
-					logger.Error("Watcher error: %v", err)
-				}
-			}
+	var timer *time.Timer
+	var rebuild <-chan time.Time
+	defer func() {
+		if timer != nil {
+			timer.Stop()
 		}
 	}()
 
-	// watch entry file
-	if err := watcher.Add(entryPath); err != nil {
-		return err
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case event, ok := <-fsw.Events:
+			if !ok {
+				return nil
+			}
+			if event.Op&fsnotify.Create != 0 {
+				if info, statErr := os.Stat(event.Name); statErr == nil && info.IsDir() {
+					if err := addTree(fsw, event.Name); err != nil {
+						logger.Error("Watcher error: %v", err)
+					}
+				}
+			}
+			if event.Op&(fsnotify.Write|fsnotify.Create|fsnotify.Remove|fsnotify.Rename) == 0 || isGeneratedOutput(event.Name, outputPath) {
+				continue
+			}
+			if timer == nil {
+				timer = time.NewTimer(debounceDelay)
+			} else {
+				if !timer.Stop() {
+					select {
+					case <-timer.C:
+					default:
+					}
+				}
+				timer.Reset(debounceDelay)
+			}
+			rebuild = timer.C
+		case err, ok := <-fsw.Errors:
+			if !ok {
+				return nil
+			}
+			logger.Error("Watcher error: %v", err)
+		case <-rebuild:
+			rebuild = nil
+			logger.PrintRebuild()
+			if err := builder.Run(opts); err != nil {
+				logger.Error("Build failed: %v", err)
+			} else {
+				logger.PrintSuccess()
+			}
+		}
 	}
-
-	// block forever
-	select {}
 }
 
+func addTree(fsw *fsnotify.Watcher, root string) error {
+	err := filepath.WalkDir(root, func(path string, entry fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return fmt.Errorf("walk watched directory %q: %w", path, walkErr)
+		}
+		if entry.IsDir() && path != root && (entry.Name() == ".git" || entry.Name() == "node_modules") {
+			return filepath.SkipDir
+		}
+		if !entry.IsDir() {
+			return nil
+		}
+		if err := fsw.Add(path); err != nil {
+			return fmt.Errorf("watch directory %q: %w", path, err)
+		}
+		return nil
+	})
+	return err
+}
+
+func isGeneratedOutput(path, output string) bool {
+	absolute, err := filepath.Abs(path)
+	if err != nil {
+		return false
+	}
+	clean := filepath.Clean(absolute)
+	if runtime.GOOS == "windows" {
+		clean = strings.ToLower(clean)
+		output = strings.ToLower(filepath.Clean(output))
+	} else {
+		output = filepath.Clean(output)
+	}
+	return clean == output || clean == output+".map"
+}

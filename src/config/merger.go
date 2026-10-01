@@ -11,6 +11,9 @@ func Merge(base, override *Config) {
 	if override.SourceMap != "" {
 		base.SourceMap = override.SourceMap
 	}
+	if override.Format != "" {
+		base.Format = override.Format
+	}
 	if override.LogLevel != "" {
 		base.LogLevel = override.LogLevel
 	}

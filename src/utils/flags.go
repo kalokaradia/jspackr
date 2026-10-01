@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -29,6 +30,7 @@ func ParseFlags() (*config.Config, string, bool, bool) {
 	flag.BoolVar(&cfg.Report, "report", false, "Build report")
 	flag.StringVar(&cfg.SourceMap, "s", "", "Source map")
 	flag.StringVar(&cfg.SourceMap, "source", "", "Source map")
+	flag.StringVar(&cfg.Format, "format", "", "Output format (esm, iife, cjs)")
 	flag.BoolVar(&cfg.Watch, "w", false, "Watch mode")
 	flag.BoolVar(&cfg.Watch, "watch", false, "Watch mode")
 	flag.StringVar(&cfg.LogLevel, "log-level", "", "Log level")
@@ -66,13 +68,30 @@ func ValidateVersionFlag(showVersion bool) error {
 	return nil
 }
 
+// ValidateOutputFile validates the output file path
+func ValidateOutputFile(path string) error {
+	info, err := os.Stat(path)
+	if err == nil && info.IsDir() {
+		return fmt.Errorf("output path is a directory: %s", path)
+	}
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("inspect output path %q: %w", path, err)
+	}
+	return nil
+}
+
+// GetAbsolutePath returns the absolute path for a given path
+func GetAbsolutePath(path string) (string, error) {
+	return filepath.Abs(path)
+}
+
 // ShowVersion prints the version information
-func ShowVersion() {
-	color.New(color.FgCyan).Println("jspackr 0.3.0")
+func ShowVersion(version string) {
+	color.New(color.FgCyan).Printf("jspackr %s\n", version)
 }
 
 // ShowUsage displays colored and formatted help message
-func ShowUsage() {
+func ShowUsage(version string) {
 	// Colors
 	titleColor := color.New(color.FgCyan, color.Bold)
 	flagColor := color.New(color.FgGreen)
@@ -82,7 +101,7 @@ func ShowUsage() {
 
 	fmt.Println()
 	titleColor.Println("╔══════════════════════════════════════════════════════════════╗")
-	titleColor.Println("║                       JSPACKR 0.3.0                          ║")
+	titleColor.Printf("║                       JSPACKR %-6s                        ║\n", version)
 	titleColor.Println("╚══════════════════════════════════════════════════════════════╝")
 	fmt.Println()
 
@@ -130,7 +149,11 @@ func ShowUsage() {
 	fmt.Println()
 
 	flagColor.Println("  -s, --source <type>    ")
-	descColor.Println("    Generate source map (inline, external, none)")
+	descColor.Println("    Generate source map (in, l, none)")
+	fmt.Println()
+
+	flagColor.Println("  --format <format>      ")
+	descColor.Println("    Output format (esm, iife, cjs; default: iife)")
 	fmt.Println()
 
 	flagColor.Println("  -r, --report           ")
@@ -198,18 +221,4 @@ func ShowUsage() {
 	titleColor.Println("║     For more info, visit: github.com/kalokaradia/jspackr     ║")
 	titleColor.Println("╚══════════════════════════════════════════════════════════════╝")
 	fmt.Println()
-}
-
-// ValidateOutputFile validates the output file path
-func ValidateOutputFile(path string) error {
-	info, err := os.Stat(path)
-	if err == nil && info.IsDir() {
-		return fmt.Errorf("output path is a directory: %s", path)
-	}
-	return nil
-}
-
-// GetAbsolutePath returns the absolute path for a given path
-func GetAbsolutePath(path string) (string, error) {
-	return filepath.Abs(path)
 }

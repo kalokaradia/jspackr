@@ -39,34 +39,36 @@ func formatBytes(bytes int64) string {
 }
 
 // PrintReport prints a detailed build report using CLI styles
-func PrintReport(result BuildResult) {
+func PrintReport(logger *cli.Logger, result BuildResult) {
 	// Output path (relative to current directory)
 	relPath, _ := filepath.Rel(".", result.OutputPath)
 
 	fmt.Println()
 
 	// Success header
-	successIcon := cli.IconsDefault.Success
-	if successIcon == "" {
-		successIcon = "✓"
+	if logger != nil {
+		logger.Success("Build succeeded")
+	} else {
+		fmt.Println("✓ Build succeeded")
 	}
-	cli.DefaultStyles.Value.Printf("  %s Build succeeded\n", successIcon)
 
 	// Output
-	cli.DefaultStyles.Key.Printf("  %s Output:", cli.IconsDefault.Space)
-	cli.DefaultStyles.Path.Printf(" %s\n", relPath)
+	if logger != nil {
+		logger.PrintKeyValue("Output", relPath, 1)
+	} else {
+		fmt.Printf("  Output: %s\n", relPath)
+	}
 
 	// Size comparison
 	inputSizeStr := formatBytes(result.InputSize)
 	outputSizeStr := formatBytes(result.OutputSize)
 	percent := float64(result.OutputSize) / float64(result.InputSize) * 100
-	arrow := cli.IconsDefault.ArrowRight
-	if arrow == "" {
-		arrow = "→"
+	sizeStr := fmt.Sprintf("%s → %s (%.0f%%)", inputSizeStr, outputSizeStr, percent)
+	if logger != nil {
+		logger.PrintStat("Size:", sizeStr)
+	} else {
+		fmt.Printf("  Size: %s\n", sizeStr)
 	}
-	sizeStr := fmt.Sprintf("%s %s %s (%.0f%%)", inputSizeStr, arrow, outputSizeStr, percent)
-	cli.DefaultStyles.Key.Printf("  %s Size:", cli.IconsDefault.Space)
-	cli.DefaultStyles.Stats.Printf(" %s\n", sizeStr)
 
 	// Module count
 	modulesStr := fmt.Sprintf("%d", result.ModuleCount)
@@ -75,26 +77,40 @@ func PrintReport(result BuildResult) {
 	} else {
 		modulesStr += " modules"
 	}
-	cli.DefaultStyles.Key.Printf("  %s Modules:", cli.IconsDefault.Space)
-	cli.DefaultStyles.Stats.Printf(" %s\n", modulesStr)
+	if logger != nil {
+		logger.PrintStat("Modules:", modulesStr)
+	} else {
+		fmt.Printf("  Modules: %s\n", modulesStr)
+	}
 
 	// Build time
 	timeStr := fmt.Sprintf("%dms", result.Elapsed.Milliseconds())
-	cli.DefaultStyles.Key.Printf("  %s Time:", cli.IconsDefault.Space)
-	cli.DefaultStyles.Stats.Printf(" %s\n", timeStr)
+	if logger != nil {
+		logger.PrintStat("Time:", timeStr)
+	} else {
+		fmt.Printf("  Time: %s\n", timeStr)
+	}
 
 	// Print detailed contributors if report flag is enabled
 	if result.Metafile != "" {
 		contributors := getContributors(result.Metafile)
 		if len(contributors) > 0 {
 			fmt.Println()
-			cli.DefaultStyles.Section.Println("Top contributors:")
+			if logger != nil {
+				logger.PrintSection("Top contributors")
+			} else {
+				fmt.Println("Top contributors:")
+			}
 			for i := 0; i < len(contributors) && i < 5; i++ {
 				item := contributors[i]
 				sizeKB := float64(item.Bytes) / 1024
 				sizeStr := fmt.Sprintf("%.1f KB", sizeKB)
-				cli.DefaultStyles.Dim.Printf("  %-50s ", item.Path)
-				cli.DefaultStyles.Value.Printf("%10s\n", sizeStr)
+				if logger != nil {
+					logger.GetColors().Printf("  %-50s ", item.Path)
+					logger.GetSuccessColor().Printf("%10s\n", sizeStr)
+				} else {
+					fmt.Printf("  %-50s %10s\n", item.Path, sizeStr)
+				}
 			}
 		}
 	}
@@ -161,4 +177,3 @@ func GetModuleCount(meta string) int {
 	}
 	return len(m.Inputs)
 }
-
