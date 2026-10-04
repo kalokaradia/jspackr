@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/kalokaradia/jspackr/main/schema/jspackr.config.schema.json",
+  "title": "jspackr configuration",
+  "description": "Configuration options supported by jspackr.config.json. The current loader silently ignores unrecognized properties; only the listed properties have an effect.",
+  "type": "object",
+  "properties": {
+    "input": {
+      "type": "string",
+      "description": "Entry JavaScript, JSX, TypeScript, or TSX file to bundle.",
+      "minLength": 1
+    },
+    "output": {
+      "type": "string",
+      "description": "Path for the generated bundle.",
+      "default": "dist/bundle.js"
+    },
+    "minify": {
+      "type": "boolean",
+      "description": "Enable esbuild whitespace, syntax, and identifier minification.",
+      "default": false
+    },
+    "report": {
+      "type": "boolean",
+      "description": "Print bundle size and module information.",
+      "default": false
+    },
+    "sourcemap": {
+      "type": "string",
+      "description": "Source map mode: none disables maps, l creates a linked map, and in embeds an inline map.",
+      "enum": [
+        "none",
+        "l",
+        "in"
+      ],
+      "default": "none"
+    },
+    "format": {
+      "type": "string",
+      "description": "Bundle output format.",
+      "enum": [
+        "iife",
+        "esm",
+        "cjs"
+      ],
+      "default": "iife"
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Rebuild when files under the entry file's directory change.",
+      "default": false
+    },
+    "typeCheck": {
+      "type": "boolean",
+      "description": "Run the project's locally installed TypeScript compiler with --noEmit before building. Requires TypeScript in node_modules; in watch mode it runs before each build.",
+      "default": false
+    },
+    "logLevel": {
+      "type": "string",
+      "description": "Minimum log level.",
+      "enum": [
+        "debug",
+        "info",
+        "warn",
+        "error"
+      ],
+      "default": "info"
+    },
+    "force": {
+      "type": "boolean",
+      "description": "Skip confirmation before overwriting an existing output file.",
+      "default": false
+    },
+    "yes": {
+      "type": "boolean",
+      "description": "Automatically accept overwrite prompts.",
+      "default": false
+    },
+    "noConfirm": {
+      "type": "boolean",
+      "description": "Skip all confirmation prompts, including creating a missing output directory.",
+      "default": false
+    }
+  },
+  "required": [
+    "input"
+  ]
+}

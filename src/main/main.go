@@ -7,12 +7,13 @@ import (
 	"github.com/kalokaradia/jspackr/src/cli"
 	"github.com/kalokaradia/jspackr/src/config"
 	"github.com/kalokaradia/jspackr/src/core/builder"
+	"github.com/kalokaradia/jspackr/src/core/typechecker"
 	"github.com/kalokaradia/jspackr/src/core/watcher"
 	"github.com/kalokaradia/jspackr/src/utils"
 )
 
 // version is set by release builds with -ldflags. Local builds report dev.
-var version = "0.4.0"
+var version = "0.5.0"
 
 func main() {
 	flagCfg, configPath, showVersion, help := utils.ParseFlags()
@@ -21,7 +22,7 @@ func main() {
 	if err := utils.ValidateVersionFlag(showVersion); err != nil {
 		// Create logger with default level for error output
 		logger := cli.New("info")
-		logger.Fatal(err.Error())
+		logger.Fatal("%s", err.Error())
 	}
 
 	if showVersion {
@@ -48,7 +49,7 @@ func main() {
 		fileCfg, err := config.Load(configPath)
 		if err != nil {
 			logger := cli.New("info")
-			logger.Fatal("Failed to load config: " + err.Error())
+			logger.Fatal("Failed to load config: %s", err.Error())
 		}
 		finalCfg = fileCfg
 	}
@@ -57,7 +58,7 @@ func main() {
 
 	if err := config.Validate(finalCfg); err != nil {
 		logger := cli.New("info")
-		logger.Fatal(err.Error())
+		logger.Fatal("%s", err.Error())
 	}
 
 	logger := cli.New(finalCfg.LogLevel)
@@ -71,6 +72,13 @@ func main() {
 	// Validate input path exists
 	if err := config.ValidateInputPath(finalCfg.Input); err != nil {
 		logger.FatalErr(err, "Invalid input path")
+	}
+
+	if finalCfg.TypeCheck {
+		logger.Info("Running TypeScript type check")
+		if err := typechecker.Check("."); err != nil {
+			logger.FatalErr(err, "Type checking failed")
+		}
 	}
 
 	// Validate output path and handle directory creation
@@ -128,7 +136,13 @@ func main() {
 
 	if finalCfg.Watch {
 		logger.Info("Watch mode enabled")
-		if err := watcher.WatchFiles(finalCfg.Input, opts, logger); err != nil {
+		var beforeBuild func() error
+		if finalCfg.TypeCheck {
+			beforeBuild = func() error {
+				return typechecker.Check(".")
+			}
+		}
+		if err := watcher.WatchFilesWithPreBuild(finalCfg.Input, opts, logger, beforeBuild); err != nil {
 			logger.FatalErr(err, "Watch failed")
 		}
 		return

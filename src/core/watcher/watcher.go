@@ -20,13 +20,23 @@ const debounceDelay = 300 * time.Millisecond
 
 // WatchFiles watches the entry tree and rebuilds until interrupted by Ctrl+C.
 func WatchFiles(entry string, opts builder.Options, logger *cli.Logger) error {
+	return WatchFilesWithPreBuild(entry, opts, logger, nil)
+}
+
+// WatchFilesWithPreBuild runs beforeBuild once before each rebuild.
+func WatchFilesWithPreBuild(entry string, opts builder.Options, logger *cli.Logger, beforeBuild func() error) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
-	return WatchFilesContext(ctx, entry, opts, logger)
+	return WatchFilesContextWithPreBuild(ctx, entry, opts, logger, beforeBuild)
 }
 
 // WatchFilesContext watches the entry tree until ctx is cancelled.
 func WatchFilesContext(ctx context.Context, entry string, opts builder.Options, logger *cli.Logger) error {
+	return WatchFilesContextWithPreBuild(ctx, entry, opts, logger, nil)
+}
+
+// WatchFilesContextWithPreBuild watches the entry tree and runs beforeBuild before each rebuild.
+func WatchFilesContextWithPreBuild(ctx context.Context, entry string, opts builder.Options, logger *cli.Logger, beforeBuild func() error) error {
 	if logger == nil {
 		logger = cli.New("info")
 	}
@@ -106,6 +116,12 @@ func WatchFilesContext(ctx context.Context, entry string, opts builder.Options, 
 		case <-rebuild:
 			rebuild = nil
 			logger.PrintRebuild()
+			if beforeBuild != nil {
+				if err := beforeBuild(); err != nil {
+					logger.Error("Type checking failed: %v", err)
+					continue
+				}
+			}
 			if err := builder.Run(opts); err != nil {
 				logger.Error("Build failed: %v", err)
 			} else {

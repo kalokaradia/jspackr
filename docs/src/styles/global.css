@@ -1,0 +1,429 @@
+/* =========================================================
+   jspackr — Homepage
+   ========================================================= */
+
+body:has(.hero) {
+  /* ---------- Palette ---------- */
+
+  --jp-bg: #080c12;
+  --jp-surface: #0d131c;
+  --jp-surface-raised: #111a25;
+
+  --jp-border: #1d2a38;
+
+  --jp-text: #eef4f8;
+  --jp-muted: #8999aa;
+
+  --jp-blue: #67b7ff;
+  --jp-blue-bright: #8bc8ff;
+  --jp-orange: #f6b84b;
+
+  /* ---------- Layout ---------- */
+
+  --jp-home-width: 66rem;
+  --jp-readable-width: 60rem;
+  --jp-code-width: 52rem;
+
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(64, 132, 190, 0.09),
+      transparent 34rem
+    ),
+    var(--jp-bg);
+}
+
+/* =========================================================
+   HERO
+   ========================================================= */
+
+/*
+  Starlight's Hero structure:
+
+  .hero
+  ├── image
+  └── .stack
+      ├── .copy
+      │   ├── h1
+      │   └── .tagline
+      └── .actions
+
+  Jangan membuat .hero menjadi grid/flex baru.
+  Grid desktop-nya sudah ditangani Starlight.
+*/
+
+body:has(.hero) .hero {
+  position: relative;
+
+  width: min(calc(100% - 3rem), var(--jp-home-width));
+
+  margin-inline: auto;
+}
+
+/* ---------- Hero background grid ---------- */
+
+body:has(.hero) .hero::before {
+  content: "";
+
+  position: absolute;
+  inset: 1rem -5rem;
+
+  z-index: -1;
+
+  background-image:
+    linear-gradient(rgba(103, 183, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(103, 183, 255, 0.035) 1px, transparent 1px);
+
+  background-size: 32px 32px;
+
+  mask-image: linear-gradient(to bottom, black, transparent 90%);
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   HERO CONTENT STACK
+   ========================================================= */
+
+/*
+  Ini bagian penting.
+
+  .stack berisi:
+    .copy
+    .actions
+
+  Keduanya harus tersusun vertikal.
+*/
+
+body:has(.hero) .hero > .stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  gap: 1.75rem;
+}
+
+/* =========================================================
+   HERO COPY
+   ========================================================= */
+
+body:has(.hero) .hero .copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  max-width: 38rem;
+
+  gap: 1rem;
+}
+
+/* ---------- Title ---------- */
+
+body:has(.hero) .hero h1 {
+  margin: 0 0 0.75rem 0;
+
+  max-width: 10ch;
+
+  color: var(--jp-text);
+
+  font-size: clamp(3.75rem, 7vw, 6rem);
+
+  font-weight: 750;
+  line-height: 0.9;
+  letter-spacing: -0.065em;
+}
+
+/* ---------- Tagline ---------- */
+
+body:has(.hero) .hero .tagline {
+  max-width: 34rem;
+
+  margin: 0;
+
+  color: var(--jp-muted);
+
+  font-size: 1.15rem;
+  line-height: 1.7;
+}
+
+/* =========================================================
+   HERO ACTIONS
+   ========================================================= */
+
+body:has(.hero) .hero .actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+
+  align-items: center;
+  justify-content: flex-start;
+
+  gap: 0.75rem;
+
+  margin: 0;
+}
+
+/* ---------- Buttons ---------- */
+
+body:has(.hero) .hero .actions a {
+  min-height: 3.1rem;
+
+  padding: 0.8rem 1.4rem;
+
+  border-radius: 0.6rem;
+
+  font-size: 0.95rem;
+  font-weight: 650;
+
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+/* ---------- Primary button ---------- */
+
+body:has(.hero) .hero .actions a:first-child {
+  background: var(--jp-blue);
+  color: #06101a;
+}
+
+body:has(.hero) .hero .actions a:first-child:hover {
+  background: var(--jp-blue-bright);
+  transform: translateY(-2px);
+}
+
+/* ---------- Secondary button ---------- */
+
+body:has(.hero) .hero .actions a:nth-child(2) {
+  border: 1px solid var(--jp-border);
+
+  background: rgba(255, 255, 255, 0.025);
+}
+
+body:has(.hero) .hero .actions a:nth-child(2):hover {
+  border-color: rgba(103, 183, 255, 0.4);
+
+  background: rgba(103, 183, 255, 0.06);
+
+  transform: translateY(-2px);
+}
+
+/* =========================================================
+   HERO IMAGE
+   ========================================================= */
+
+/*
+  Starlight menaruh image langsung sebagai child dari .hero.
+
+  Jadi jangan memakai:
+    .hero .hero-image
+
+  karena elemen tersebut memang tidak ada di Hero bawaan.
+*/
+
+body:has(.hero) .hero > img {
+  position: relative;
+
+  width: min(100%, 22rem);
+
+  filter: drop-shadow(0 1.5rem 3rem rgba(0, 0, 0, 0.35))
+    drop-shadow(0 0 2rem rgba(103, 183, 255, 0.08));
+}
+
+/* Glow di belakang mascot */
+
+body:has(.hero) .hero > img::before {
+  content: "";
+}
+
+/* =========================================================
+   MAIN CONTENT
+   ========================================================= */
+
+body:has(.hero) .sl-markdown-content {
+  width: min(calc(100% - 3rem), var(--jp-home-width));
+
+  margin-inline: auto;
+}
+
+/* ---------- Normal text ---------- */
+
+body:has(.hero) .sl-markdown-content > * p {
+  max-width: var(--jp-readable-width);
+
+  color: var(--jp-muted);
+
+  line-height: 1.75;
+}
+
+/* ---------- Headings ---------- */
+
+body:has(.hero) .sl-markdown-content > * h2 {
+  max-width: var(--jp-readable-width);
+
+  margin-top: 5rem;
+  margin-bottom: 1.25rem;
+
+  color: var(--jp-text);
+
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+
+  letter-spacing: -0.04em;
+}
+
+/* =========================================================
+   CODE BLOCKS
+   ========================================================= */
+
+body:has(.hero) .sl-markdown-content > * .expressive-code {
+  width: min(100%, var(--jp-code-width));
+
+  margin-top: 0;
+  margin-right: auto;
+  margin-bottom: 2rem;
+  margin-left: 0;
+}
+
+/* Jangan mengambil alih syntax highlighting Expressive Code */
+
+body:has(.hero) .sl-markdown-content > * .expressive-code pre {
+  border-color: var(--jp-border);
+}
+
+/* =========================================================
+   CARDS
+   ========================================================= */
+
+body:has(.hero) .sl-markdown-content > * .sl-card-grid {
+  width: min(100%, var(--jp-readable-width));
+
+  margin-top: 2rem;
+  margin-bottom: 4rem;
+
+  gap: 1rem;
+}
+
+body:has(.hero) .sl-markdown-content .card {
+  min-height: 11rem;
+
+  border-color: var(--jp-border);
+
+  background:
+    linear-gradient(135deg, rgba(103, 183, 255, 0.035), transparent 60%),
+    var(--jp-surface);
+
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+body:has(.hero) .sl-markdown-content .card:hover {
+  border-color: rgba(103, 183, 255, 0.3);
+
+  background:
+    linear-gradient(135deg, rgba(103, 183, 255, 0.07), transparent 65%),
+    var(--jp-surface-raised);
+
+  transform: translateY(-3px);
+}
+
+/* =========================================================
+   BUILD PIPELINE
+   ========================================================= */
+
+body:has(.hero) .sl-markdown-content > * h2:last-of-type {
+  margin-top: 4rem;
+}
+
+body:has(.hero) .sl-markdown-content > * h2:last-of-type + .expressive-code {
+  width: min(100%, var(--jp-code-width));
+
+  margin-left: 0;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 50rem) {
+  /* ---------- Hero ---------- */
+
+  body:has(.hero) .hero {
+    width: min(calc(100% - 2rem), var(--jp-home-width));
+
+    padding-block: 3rem 4rem;
+
+    text-align: center;
+  }
+
+  /* ---------- Hero stack ---------- */
+
+  body:has(.hero) .hero > .stack {
+    align-items: center;
+
+    gap: 1.5rem;
+  }
+
+  /* ---------- Image ---------- */
+
+  body:has(.hero) .hero > img {
+    width: min(15rem, 70vw);
+  }
+
+  /* ---------- Copy ---------- */
+
+  body:has(.hero) .hero .copy {
+    align-items: center;
+
+    max-width: 100%;
+
+    margin-inline: auto;
+  }
+
+  /* ---------- Title ---------- */
+
+  body:has(.hero) .hero h1 {
+    max-width: none;
+
+    font-size: clamp(3rem, 14vw, 4.5rem);
+  }
+
+  /* ---------- Tagline ---------- */
+
+  body:has(.hero) .hero .tagline {
+    max-width: 34rem;
+
+    margin-inline: auto;
+  }
+
+  /* ---------- Actions ---------- */
+
+  body:has(.hero) .hero .actions {
+    justify-content: center;
+  }
+
+  /* ---------- Main content ---------- */
+
+  body:has(.hero) .sl-markdown-content {
+    width: min(calc(100% - 2rem), var(--jp-home-width));
+  }
+
+  /* ---------- Code ---------- */
+
+  body:has(.hero) .sl-markdown-content > * .expressive-code {
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  body:has(.hero) .hero .actions a,
+  body:has(.hero) .sl-markdown-content .card {
+    transition: none;
+  }
+}

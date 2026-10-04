@@ -1,6 +1,6 @@
 {
   "name": "jspackr",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "A fast and modern JavaScript bundler powered by esbuild",
   "bin": {
     "jspackr": "index.js"
@@ -35,5 +35,8 @@
   "engines": {
     "node": ">=18"
   },
-  "preferGlobal": true
+  "preferGlobal": true,
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
 }

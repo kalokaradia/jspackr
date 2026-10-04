@@ -10,6 +10,7 @@ type Config struct {
 	Format    string `json:"format"`
 	Watch     bool   `json:"watch"`
 	LogLevel  string `json:"logLevel"`
+	TypeCheck bool   `json:"typeCheck"`
 	// Force flags for non-interactive mode
 	Force     bool `json:"force"`     // Skip overwrite confirmation
 	Yes       bool `json:"yes"`       // Auto-confirm overwrite

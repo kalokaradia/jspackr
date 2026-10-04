@@ -1,0 +1,65 @@
+---
+title: jspackr docs
+template: splash
+
+hero:
+  title: jspackr docs
+  tagline: A fast and modern JavaScript and TypeScript bundler powered by esbuild
+  image:
+    alt: jspackr
+    file: ../../assets/logo.svg
+  actions:
+    - text: Get started
+      link: /getting-started/quick-start/
+      icon: right-arrow
+
+    - text: View on GitHub
+      link: https://github.com/kalokaradia/jspackr
+      icon: external
+      variant: minimal
+      attrs:
+        rel: me
+---
+
+import { Card, CardGrid } from "@astrojs/starlight/components";
+
+```sh
+jspackr --input src/index.js --out dist/bundle.js --minify
+```
+
+jspackr bundles one entry point and its imports for browser use. Choose an output format, optionally minify or emit a source map, and run a rebuild watcher from the same CLI.
+
+## Start here
+
+<CardGrid>
+  <Card title="Install jspackr" icon="download">
+    Choose the Go installation or check the npm package's available platform
+    binaries. [Installation guide](/getting-started/installation/)
+  </Card>
+  <Card title="Build your first bundle" icon="rocket">
+    Create a small entry file, run jspackr, and execute the output. [Quick
+    start](/getting-started/quick-start/)
+  </Card>
+  <Card title="Configure a build" icon="setting">
+    Learn how JSON config and CLI options combine. [Configuration
+    guide](/guides/configuration/)
+  </Card>
+  <Card title="Look up an option" icon="document">
+    Find every flag, default, accepted value, and interaction. [CLI
+    reference](/cli/reference/)
+  </Card>
+</CardGrid>
+
+## What jspackr does
+
+jspackr invokes esbuild with bundling enabled and the browser platform. It accepts one entry point, follows its imports, and writes one output file. The default output format is `iife`; ESM and CommonJS are also available.
+
+TypeScript and JSX syntax are transformed by esbuild when used in supported file extensions. Optional type checking runs the project's local TypeScript compiler with `--type-check`; esbuild remains responsible for bundling. See [TypeScript and JSX](/guides/typescript-jsx/) for details.
+
+## Build pipeline
+
+```text
+optional tsc --noEmit → esbuild bundle → output file
+```
+
+There is no CLI support for multiple entry points, code splitting, plugins, or selecting a target environment. See [supported features](/reference/supported-features/) for the current scope.

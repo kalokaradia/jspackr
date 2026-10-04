@@ -33,6 +33,7 @@ func ParseFlags() (*config.Config, string, bool, bool) {
 	flag.StringVar(&cfg.Format, "format", "", "Output format (esm, iife, cjs)")
 	flag.BoolVar(&cfg.Watch, "w", false, "Watch mode")
 	flag.BoolVar(&cfg.Watch, "watch", false, "Watch mode")
+	flag.BoolVar(&cfg.TypeCheck, "type-check", false, "Run TypeScript type checking before building")
 	flag.StringVar(&cfg.LogLevel, "log-level", "", "Log level")
 	// Force flags for non-interactive mode
 	flag.BoolVar(&cfg.Force, "f", false, "Force overwrite (skip confirmation)")
@@ -162,6 +163,10 @@ func ShowUsage(version string) {
 
 	flagColor.Println("  -w, --watch            ")
 	descColor.Println("    Watch for file changes")
+	fmt.Println()
+
+	flagColor.Println("  --type-check           ")
+	descColor.Println("    Run the local TypeScript compiler before building")
 	fmt.Println()
 
 	flagColor.Println("  --log-level <level>    ")

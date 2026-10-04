@@ -26,6 +26,9 @@ func Merge(base, override *Config) {
 	if override.Watch {
 		base.Watch = true
 	}
+	if override.TypeCheck {
+		base.TypeCheck = true
+	}
 	// Merge force flags
 	if override.Force {
 		base.Force = true
